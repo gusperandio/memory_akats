@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
     private var soundTheme: Int = 0
     private var soundFlip: Int = 0
     private var soundYooo: Int = 0
+    private var soundWin: Int = 0
     private var points: Int = 0;
     private val customFontFamily = FontFamily(
         Font(R.font.protestrevolutionregular, FontWeight.Normal)
@@ -90,12 +92,9 @@ class MainActivity : ComponentActivity() {
         soundTheme = soundPool.load(this, R.raw.theme, 1)
         soundFlip = soundPool.load(this, R.raw.flip, 1)
         soundYooo = soundPool.load(this, R.raw.yoooo, 1)
-
-
+        soundWin = soundPool.load(this, R.raw.win, 1)
 
         setContent {
-
-
             var showModal by remember { mutableStateOf(false) }
             var first by remember { mutableStateOf(true) }
             var time by remember { mutableIntStateOf(0) }
@@ -173,7 +172,7 @@ class MainActivity : ComponentActivity() {
                                 .padding(2.dp),
                             onClick = {
                                 first = false
-                                time = 2
+                                time = 20
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = red),
                             shape = RoundedCornerShape(8.dp)
@@ -224,7 +223,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
     fun MyGrid() {
         val drawableList = listOf(
@@ -269,22 +267,28 @@ class MainActivity : ComponentActivity() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = gray, shape = RoundedCornerShape(8.dp))
-                .border(2.dp, red, RoundedCornerShape(8.dp))
+                .background(Color.Black.copy(alpha = 0.4f))
                 .clickable { onClose() }
         ) {
             Card(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .background(Color.Black)
+                    .border(2.dp, red, RoundedCornerShape(16.dp)),
                 elevation = CardDefaults.cardElevation(8.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.background(gray),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "ERROU!!!", style = MaterialTheme.typography.titleLarge)
+
+                    Text(
+                        text = "ERROU!!!", fontFamily = customFontFamily, color = Color.White,
+                        fontSize = 32.sp,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Box(
@@ -301,23 +305,51 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = onClose,
+                    Row(
                         modifier = Modifier
-                            .padding(2.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = red),
-                        shape = RoundedCornerShape(8.dp)
+                            .fillMaxWidth()
+                            .padding(vertical = 22.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Close",
-                            fontFamily = customFontFamily,
-                            fontSize = 32.sp,
-                            color = Color.White
-                        )
+                        Button(
+                            onClick = onClose,
+                            modifier = Modifier
+                                .padding(vertical = 22.dp, horizontal = 6.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = red),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Reiniciar",
+                                fontFamily = customFontFamily,
+                                fontSize = 32.sp,
+                                color = Color.White
+                            )
+                        }
+
+                        Button(
+                            onClick = onClose,
+                            modifier = Modifier
+                                .padding(vertical = 22.dp, horizontal = 6.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = red),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Voltar",
+                                fontFamily = customFontFamily,
+                                fontSize = 32.sp,
+                                color = Color.Black
+                            )
+                        }
                     }
+
+
                 }
             }
+
+
         }
     }
 }
