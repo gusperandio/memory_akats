@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -37,8 +38,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +53,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -94,7 +100,7 @@ class MainActivity : ComponentActivity() {
             var showModal by remember { mutableStateOf(false) }
             var first by remember { mutableStateOf(true) }
             var time by remember { mutableIntStateOf(0) }
-            var restartKey by remember { mutableStateOf(0) }
+            var restartKey by remember { mutableIntStateOf(0) }
 
             if (!first) {
                 Box(
@@ -118,7 +124,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                firstScreen(easyClick = {
+                FirstScreen(easyClick = {
                     first = false
                     time = 60
                 }, mediumClick = {
@@ -134,7 +140,7 @@ class MainActivity : ComponentActivity() {
 
 
     @Composable
-    fun firstScreen(easyClick: () -> Unit, mediumClick: () -> Unit, hardClick: () -> Unit) {
+    fun FirstScreen(easyClick: () -> Unit, mediumClick: () -> Unit, hardClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -242,22 +248,26 @@ class MainActivity : ComponentActivity() {
             R.drawable.sasuke
         )
 
-
         val shuffledDrawableIds = remember(key) {
             val selectedItems = drawableList.shuffled().take(6)
             val pairedItems = selectedItems + selectedItems
             pairedItems.shuffled()
         }
 
+        var firstSelected by remember { mutableStateOf<Int?>(null) }
+        var Index by remember { mutableStateOf<Int?>(null) }
+        var points by remember { mutableStateOf(0) }
+        val coroutineScope = rememberCoroutineScope()
+        var green = true
 
-        var points by remember(key) { mutableIntStateOf(0) }
-
-        val cards = shuffledDrawableIds.map { drawableId ->
-            val rotated = remember(key) { mutableStateOf(false) }
+        val cards = shuffledDrawableIds.mapIndexed { index, drawableId ->
+            val rotated = remember { mutableStateOf(false) }
             CardItem(
                 outside = painterResource(id = R.drawable.akatsuki),
                 inside = painterResource(id = drawableId),
-                rotated = rotated
+                rotated = rotated,
+                index = index,
+                id = drawableId
             )
         }
 
@@ -267,12 +277,30 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.padding(0.dp)
             ) {
                 items(cards) { item ->
-                    AkatsukiCard(item, onSound = { soundPool.play(soundFlip, 1f, 1f, 1, 0, 1f) })
+                    AkatsukiCard(item,
+                        onSound = { soundPool.play(soundFlip, 1f, 1f, 1, 0, 1f) },
+                        onClick = {
+                            if (firstSelected == null) {
+                                firstSelected = item.id
+                                Index = item.index
+                            } else {
+                                if (firstSelected == item.id) {
+                                    points += 1
+                                } else {
+                                    coroutineScope.launch {
+                                        delay(1000) // Wait for 1 second
+                                        cards[Index!!].rotated.value = false
+                                        item.rotated.value = false
+                                    }
+                                }
+                                firstSelected = null
+                            }
+                        }
+                    )
                 }
             }
         }
     }
-
 
     @Composable
     fun FloatingCard(onBack: () -> Unit, onRestart: () -> Unit) {
@@ -280,7 +308,6 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.4f))
-            //.clickable { onClose() }
         ) {
             Card(
                 modifier = Modifier
@@ -356,8 +383,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-
-
                 }
             }
         }

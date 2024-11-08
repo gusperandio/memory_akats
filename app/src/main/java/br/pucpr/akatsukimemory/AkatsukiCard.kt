@@ -31,14 +31,16 @@ import androidx.compose.ui.unit.dp
 data class CardItem(
     val outside: androidx.compose.ui.graphics.painter.Painter,
     val inside: androidx.compose.ui.graphics.painter.Painter,
-    val rotated: MutableState<Boolean>
+    val rotated: MutableState<Boolean>,
+    val index: Int,
+    val id: Int
 )
 
 @Composable
 fun AkatsukiCard(
     cardItem: CardItem,
     onSound: () -> Unit,
-
+    onClick: () -> Unit
 ) {
     val modifier: Modifier = Modifier
     val rotation by animateFloatAsState(
@@ -67,16 +69,18 @@ fun AkatsukiCard(
             .clickable {
                 cardItem.rotated.value = !cardItem.rotated.value
                 onSound()
-            },
-
+                onClick()
+            }
     ) {
         Card(
             modifier = modifier
                 .shadow(
                     elevation = 10.dp,
                     spotColor = Color.White,
-                    shape = RoundedCornerShape(8.dp))
-                .fillMaxWidth().background(Color.Black),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .fillMaxWidth()
+                .background(Color.Black),
             shape = RoundedCornerShape(15.dp),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 4.dp
