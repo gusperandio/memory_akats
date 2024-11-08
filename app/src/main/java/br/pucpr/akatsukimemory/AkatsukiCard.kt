@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,27 +31,28 @@ import androidx.compose.ui.unit.dp
 data class CardItem(
     val outside: androidx.compose.ui.graphics.painter.Painter,
     val inside: androidx.compose.ui.graphics.painter.Painter,
+    val rotated: MutableState<Boolean>
 )
 
 @Composable
 fun AkatsukiCard(
     cardItem: CardItem,
-    onSound: () -> Unit
+    onSound: () -> Unit,
+
 ) {
-    var rotated by remember { mutableStateOf(false) }
     val modifier: Modifier = Modifier
     val rotation by animateFloatAsState(
-        targetValue = if (rotated) 180f else 0f,
+        targetValue = if (cardItem.rotated.value) 180f else 0f,
         animationSpec = tween(500)
     )
 
     val animateFront by animateFloatAsState(
-        targetValue = if (!rotated) 1f else 0f,
+        targetValue = if (!cardItem.rotated.value) 1f else 0f,
         animationSpec = tween(500)
     )
 
     val animateBack by animateFloatAsState(
-        targetValue = if (rotated) 1f else 0f,
+        targetValue = if (cardItem.rotated.value) 1f else 0f,
         animationSpec = tween(200)
     )
 
@@ -63,7 +65,7 @@ fun AkatsukiCard(
                 cameraDistance = 6 * density
             }
             .clickable {
-                rotated = !rotated
+                cardItem.rotated.value = !cardItem.rotated.value
                 onSound()
             },
 
@@ -80,7 +82,7 @@ fun AkatsukiCard(
                 defaultElevation = 4.dp
             ),
         ) {
-            if (!rotated) {
+            if (!cardItem.rotated.value) {
                 Box(modifier = Modifier
                     .height(170.dp)
                     .graphicsLayer {

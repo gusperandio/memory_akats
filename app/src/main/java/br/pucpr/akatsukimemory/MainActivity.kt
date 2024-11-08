@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
     )
     private val gray = Color(android.graphics.Color.parseColor("#1C1C24"))
     private val red = Color(android.graphics.Color.parseColor("#C1392B"))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -77,14 +78,9 @@ class MainActivity : ComponentActivity() {
         }
 
         soundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build()
-            SoundPool.Builder()
-                .setMaxStreams(3)
-                .setAudioAttributes(audioAttributes)
-                .build()
+            val audioAttributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
+            SoundPool.Builder().setMaxStreams(3).setAudioAttributes(audioAttributes).build()
         } else {
             SoundPool(3, AudioManager.STREAM_MUSIC, 0)
         }
@@ -98,7 +94,7 @@ class MainActivity : ComponentActivity() {
             var showModal by remember { mutableStateOf(false) }
             var first by remember { mutableStateOf(true) }
             var time by remember { mutableIntStateOf(0) }
-
+            var restartKey by remember { mutableStateOf(0) }
 
             if (!first) {
                 Box(
@@ -107,99 +103,110 @@ class MainActivity : ComponentActivity() {
                         .background(gray)
                         .padding(top = 32.dp)
                 ) {
-                    TimerText(customFontFamily, time, onTimeUp = { showModal = true })
-                    MyGrid()
+                    TimerText(
+                        customFontFamily, time, onTimeUp = { showModal = true }, key = restartKey
+                    )
+                    MyGrid(key = restartKey)
                     if (showModal) {
-                        FloatingCard(onClose = {
+                        FloatingCard(onBack = {
                             showModal = false
                             first = true
-                        }) // Pass the close action to the card
+                        }, onRestart = {
+                            showModal = false
+                            restartKey++
+                        })
                     }
                 }
             } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(gray)
-                        .padding(top = 32.dp)
-                ) {
-                    RotatingImage()
-
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 128.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Button(
-                            modifier = Modifier
-                                .padding(2.dp),
-                            onClick = {
-                                first = false
-                                time = 60
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = red),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = "Fácil",
-                                fontFamily = customFontFamily,
-                                fontSize = 32.sp,
-                                color = gray
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            modifier = Modifier
-                                .padding(2.dp),
-                            onClick = {
-                                first = false
-                                time = 45
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = red),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = "Difícil",
-                                fontFamily = customFontFamily,
-                                fontSize = 32.sp,
-                                color = gray
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            modifier = Modifier
-                                .padding(2.dp),
-                            onClick = {
-                                first = false
-                                time = 20
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = red),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = "TRYHARD!!!!",
-                                fontFamily = customFontFamily,
-                                fontSize = 32.sp,
-                                color = gray
-                            )
-                        }
-                    }
-                }
+                firstScreen(easyClick = {
+                    first = false
+                    time = 60
+                }, mediumClick = {
+                    first = false
+                    time = 45
+                }, hardClick = {
+                    first = false
+                    time = 20
+                })
             }
         }
     }
 
 
     @Composable
-    fun TimerText(
-        font: FontFamily = FontFamily.Serif,
-        time: Int,
-        onTimeUp: () -> Unit
-    ) {
-        var ticks by remember { mutableIntStateOf(time) }
+    fun firstScreen(easyClick: () -> Unit, mediumClick: () -> Unit, hardClick: () -> Unit) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(gray)
+                .padding(top = 32.dp)
+        ) {
+            RotatingImage()
 
-        LaunchedEffect(Unit) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 128.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(
+                    modifier = Modifier.padding(2.dp),
+                    onClick = {
+                        easyClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = red),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Fácil",
+                        fontFamily = customFontFamily,
+                        fontSize = 32.sp,
+                        color = gray
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    modifier = Modifier.padding(2.dp),
+                    onClick = {
+                        mediumClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = red),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Difícil",
+                        fontFamily = customFontFamily,
+                        fontSize = 32.sp,
+                        color = gray
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    modifier = Modifier.padding(2.dp),
+                    onClick = {
+                        hardClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = red),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "TRYHARD!!!!",
+                        fontFamily = customFontFamily,
+                        fontSize = 32.sp,
+                        color = gray
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun TimerText(
+        font: FontFamily = FontFamily.Serif, time: Int, onTimeUp: () -> Unit, key: Int
+    ) {
+        var ticks by remember(key) { mutableIntStateOf(time) }
+
+        LaunchedEffect(key) {
             while (ticks > 0) {
                 delay(1.seconds)
                 ticks--
@@ -215,16 +222,13 @@ class MainActivity : ComponentActivity() {
             contentAlignment = Alignment.CenterEnd
         ) {
             Text(
-                text = "Tempo: $ticks",
-                color = Color.White,
-                fontSize = 32.sp,
-                fontFamily = font
+                text = "Tempo: $ticks", color = Color.White, fontSize = 32.sp, fontFamily = font
             )
         }
     }
 
     @Composable
-    fun MyGrid() {
+    fun MyGrid(key: Int) {
         val drawableList = listOf(
             R.drawable.deidara,
             R.drawable.itachi,
@@ -238,18 +242,25 @@ class MainActivity : ComponentActivity() {
             R.drawable.sasuke
         )
 
-        val selectedItems = drawableList.shuffled().take(6)
-        val pairedItems = selectedItems + selectedItems
-        val shuffledItems = pairedItems.shuffled()
 
-        val cards = shuffledItems.map { insideDrawableId ->
+        val shuffledDrawableIds = remember(key) {
+            val selectedItems = drawableList.shuffled().take(6)
+            val pairedItems = selectedItems + selectedItems
+            pairedItems.shuffled()
+        }
+
+
+        var points by remember(key) { mutableIntStateOf(0) }
+
+        val cards = shuffledDrawableIds.map { drawableId ->
+            val rotated = remember(key) { mutableStateOf(false) }
             CardItem(
                 outside = painterResource(id = R.drawable.akatsuki),
-                inside = painterResource(id = insideDrawableId)
+                inside = painterResource(id = drawableId),
+                rotated = rotated
             )
         }
 
-        val points by remember { mutableIntStateOf(0) }
         Box(modifier = Modifier.padding(top = 32.dp)) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3), // 3 columns
@@ -262,13 +273,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     @Composable
-    fun FloatingCard(onClose: () -> Unit) {
+    fun FloatingCard(onBack: () -> Unit, onRestart: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.4f))
-                .clickable { onClose() }
+            //.clickable { onClose() }
         ) {
             Card(
                 modifier = Modifier
@@ -285,7 +297,9 @@ class MainActivity : ComponentActivity() {
                 ) {
 
                     Text(
-                        text = "ERROU!!!", fontFamily = customFontFamily, color = Color.White,
+                        text = "TEMPO ACABOU!!!",
+                        fontFamily = customFontFamily,
+                        color = Color.White,
                         fontSize = 32.sp,
                         modifier = Modifier.padding(top = 12.dp)
                     )
@@ -315,9 +329,8 @@ class MainActivity : ComponentActivity() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
-                            onClick = onClose,
-                            modifier = Modifier
-                                .padding(vertical = 22.dp, horizontal = 6.dp),
+                            onClick = onRestart,
+                            modifier = Modifier.padding(vertical = 22.dp, horizontal = 6.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = red),
                             shape = RoundedCornerShape(8.dp)
                         ) {
@@ -330,9 +343,8 @@ class MainActivity : ComponentActivity() {
                         }
 
                         Button(
-                            onClick = onClose,
-                            modifier = Modifier
-                                .padding(vertical = 22.dp, horizontal = 6.dp),
+                            onClick = onBack,
+                            modifier = Modifier.padding(vertical = 22.dp, horizontal = 6.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = red),
                             shape = RoundedCornerShape(8.dp)
                         ) {
@@ -348,8 +360,6 @@ class MainActivity : ComponentActivity() {
 
                 }
             }
-
-
         }
     }
 }
