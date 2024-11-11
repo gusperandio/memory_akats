@@ -57,7 +57,6 @@ fun AkatsukiCard(
         targetValue = if (cardItem.rotated.value) 1f else 0f,
         animationSpec = tween(200)
     )
-
     Box(
         modifier = Modifier
             .fillMaxWidth(0.4f)

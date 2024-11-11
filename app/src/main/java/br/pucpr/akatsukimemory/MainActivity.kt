@@ -51,6 +51,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.coroutineScope
@@ -67,6 +68,8 @@ class MainActivity : ComponentActivity() {
     private var soundYooo: Int = 0
     private var soundWin: Int = 0
     private var points: Int = 0;
+    private var okCard: Int = 0;
+    private var message: String = "";
     private val customFontFamily = FontFamily(
         Font(R.font.protestrevolutionregular, FontWeight.Normal)
     )
@@ -120,7 +123,8 @@ class MainActivity : ComponentActivity() {
                         }, onRestart = {
                             showModal = false
                             restartKey++
-                        })
+                        },
+                        points)
                     }
                 }
             } else {
@@ -216,6 +220,15 @@ class MainActivity : ComponentActivity() {
             while (ticks > 0) {
                 delay(1.seconds)
                 ticks--
+
+                if (ticks == 0)
+                    message = "Tempo Acabou!"
+
+                if (okCard == 6){
+                    message = "Shinobi vencedor!!!"
+                    okCard = 0
+                    ticks = -1
+                }
             }
             onTimeUp()
             soundPool.play(soundYooo, 1f, 1f, 1, 0, 1f)
@@ -255,18 +268,16 @@ class MainActivity : ComponentActivity() {
         }
 
         var firstSelected by remember { mutableStateOf<Int?>(null) }
-        var Index by remember { mutableStateOf<Int?>(null) }
-        var points by remember { mutableStateOf(0) }
+        var index by remember { mutableStateOf<Int?>(null) }
         val coroutineScope = rememberCoroutineScope()
-        var green = true
-
-        val cards = shuffledDrawableIds.mapIndexed { index, drawableId ->
+        var bonusPoints by remember { mutableStateOf<Int>(10) }
+        val cards = shuffledDrawableIds.mapIndexed { indexx, drawableId ->
             val rotated = remember { mutableStateOf(false) }
             CardItem(
                 outside = painterResource(id = R.drawable.akatsuki),
                 inside = painterResource(id = drawableId),
                 rotated = rotated,
-                index = index,
+                index = indexx,
                 id = drawableId
             )
         }
@@ -280,16 +291,21 @@ class MainActivity : ComponentActivity() {
                     AkatsukiCard(item,
                         onSound = { soundPool.play(soundFlip, 1f, 1f, 1, 0, 1f) },
                         onClick = {
+
                             if (firstSelected == null) {
                                 firstSelected = item.id
-                                Index = item.index
+                                index = item.index
                             } else {
                                 if (firstSelected == item.id) {
-                                    points += 1
+                                    okCard += 1
+                                    points += (1000 - (bonusPoints * 10)) * bonusPoints
                                 } else {
+                                    if(bonusPoints > 1)
+                                        bonusPoints--
+
                                     coroutineScope.launch {
-                                        delay(1000) // Wait for 1 second
-                                        cards[Index!!].rotated.value = false
+                                        delay(1000)
+                                        cards[index!!].rotated.value = false
                                         item.rotated.value = false
                                     }
                                 }
@@ -303,7 +319,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun FloatingCard(onBack: () -> Unit, onRestart: () -> Unit) {
+    fun FloatingCard(onBack: () -> Unit, onRestart: () -> Unit, numbers : Int) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -339,7 +355,7 @@ class MainActivity : ComponentActivity() {
                         contentAlignment = Alignment.BottomStart
                     ) {
                         Text(
-                            text = "Pontos: $points",
+                            text = "Pontos: $numbers",
                             color = Color.White,
                             fontSize = 32.sp,
                             fontFamily = customFontFamily
